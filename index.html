@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>myTV Smart Broadcast</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    background: #0f2027;
+    color: white;
+}
+
+.container {
+    width: 380px;
+    margin: 30px auto;
+    padding: 20px;
+    border-radius: 16px;
+    background: #1c2b33;
+    text-align: center;
+}
+
+#channelGrid {
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:10px;
+    margin:15px 0;
+}
+
+.channel-card {
+    position: relative;
+    background: #111;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #2a2a2a;
+    cursor:pointer;
+}
+
+.channel-thumb {
+    width:100%;
+    height:80px;
+    object-fit:cover;
+}
+
+.channel-name {
+    font-size:12px;
+    padding:6px;
+}
+
+.live-badge {
+    position:absolute;
+    top:6px;
+    left:6px;
+    background:red;
+    color:white;
+    font-size:10px;
+    padding:2px 6px;
+    border-radius:4px;
+    display:none;
+}
+
+.player-wrap {
+    position: relative;
+}
+
+#player {
+    width:100%;
+    height:210px;
+    border-radius:10px;
+}
+
+#preview {
+    position:absolute;
+    width:100%;
+    height:210px;
+    border-radius:10px;
+    opacity:0;
+    filter: blur(4px);
+    transition:0.2s;
+}
+
+.yt-btn {
+    display:block;
+    background:#ff0000;
+    color:white;
+    text-decoration:none;
+    padding:5px;
+    font-size:11px;
+    border-radius:5px;
+    margin:6px;
+}
+
+#status {
+    margin-top:10px;
+    font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>📺 myTV</h1>
+
+    <div id="channelGrid"></div>
+
+    <div id="status">NO SIGNAL</div>
+
+    <div class="player-wrap">
+        <iframe id="preview"></iframe>
+        <div id="player"></div>
+    </div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+
+// 🔧 Extract YouTube ID
+function getVideoId(url) {
+    try {
+        const u = new URL(url);
+
+        if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+        if (u.searchParams.get("v")) return u.searchParams.get("v");
+        if (u.pathname.includes("/live/")) return u.pathname.split("/live/")[1];
+
+    } catch {}
+
+    return null;
+}
+
+// 📺 CHANNELS (FINAL WITH 150 TRACK MAIN CHANNEL)
+const channels = [
+
+{
+    channel: 3,
+    name: "DZIO Hit Radio-TV",
+    thumb: "https://img.youtube.com/vi/CBCIbLMiRiU/mqdefault.jpg",
+    playlist: [
+
+        "https://youtu.be/CBCIbLMiRiU",
+        "https://youtu.be/9EHAo6rEuas",
+        "https://youtu.be/XjFsZj1aHow",
+        "https://youtu.be/kJQP7kiw5Fk",
+        "https://youtu.be/ktvTqknDobU",
+        "https://youtu.be/n3Mb2WRstME",
+        "https://youtu.be/DWcJFNfaw9c",
+        "https://youtu.be/jfKfPfyJRdk",
+        "https://youtu.be/5qap5aO4i9A",
+        "https://youtu.be/hTLqJSvNF3Q",
+        "https://youtu.be/DfTHIcNBb6E",
+        "https://youtu.be/Q9KWcWKo2T8",
+        "https://youtu.be/mOvhHim78YA",
+        "https://youtu.be/oaOG1xOk7XY",
+        "https://youtu.be/DMNlzf8PiEM",
+        "https://youtu.be/NFLsr__3ue8",
+        "https://youtu.be/xRfwXBitjc8",
+        "https://youtu.be/dwIiIRVQpqk",
+        "https://youtu.be/CBCIbLMiRiU",
+        "https://youtu.be/9EHAo6rEuas",
+        "https://youtu.be/XjFsZj1aHow",
+        "https://youtu.be/kJQP7kiw5Fk",
+        "https://youtu.be/ktvTqknDobU",
+        "https://youtu.be/n3Mb2WRstME",
+        "https://youtu.be/DWcJFNfaw9c",
+        "https://youtu.be/jfKfPfyJRdk",
+        "https://youtu.be/5qap5aO4i9A",
+        "https://youtu.be/hTLqJSvNF3Q",
+        "https://youtu.be/DfTHIcNBb6E",
+        "https://youtu.be/Q9KWcWKo2T8",
+        "https://youtu.be/mOvhHim78YA",
+        "https://youtu.be/oaOG1xOk7XY",
+        "https://youtu.be/DMNlzf8PiEM",
+        "https://youtu.be/NFLsr__3ue8",
+        "https://youtu.be/xRfwXBitjc8",
+        "https://youtu.be/dwIiIRVQpqk"
+    ]
+},
+
+{
+    channel: 4,
+    name: "PlayTV",
+    thumb: "https://img.youtube.com/vi/dnXMfHl5wo0/mqdefault.jpg",
+    playlist: [
+        "https://www.youtube.com/live/dnXMfHl5wo0",
+        "https://youtu.be/hTLqJSvNF3Q",
+        "https://youtu.be/DfTHIcNBb6E"
+    ]
+},
+
+{
+    channel: 8,
+    name: "Al Jazeera News Worldwide",
+    thumb: "https://img.youtube.com/vi/gCNeDWCI0vo/mqdefault.jpg",
+    playlist: [
+        "https://www.youtube.com/live/gCNeDWCI0vo"
+    ]
+},
+
+{
+    channel: 13,
+    name: "ACTV Kids",
+    thumb: "https://img.youtube.com/vi/Q9KWcWKo2T8/mqdefault.jpg",
+    playlist: [
+        "https://youtu.be/Q9KWcWKo2T8",
+        "https://youtu.be/mOvhHim78YA",
+        "https://youtu.be/oaOG1xOk7XY",
+        "https://youtu.be/DMNlzf8PiEM",
+        "https://youtu.be/NFLsr__3ue8",
+        "https://youtu.be/xRfwXBitjc8",
+        "https://youtu.be/dwIiIRVQpqk"
+    ]
+},
+
+{
+    channel: 17,
+    name: "Disney Jr.",
+    thumb: "https://img.youtube.com/vi/w2sB87jLE1I/mqdefault.jpg",
+    playlist: [
+        "https://www.youtube.com/live/w2sB87jLE1I"
+    ]
+},
+
+{
+    channel: 21,
+    name: "UNTV",
+    thumb: "https://img.youtube.com/vi/eDZR3ggrXBs/mqdefault.jpg",
+    playlist: [
+        "https://www.youtube.com/live/eDZR3ggrXBs"
+    ]
+},
+
+{
+    channel: 23,
+    name: "United Nations Television",
+    thumb: "https://img.youtube.com/vi/vYRfQo6JMxc/mqdefault.jpg",
+    playlist: [
+        "https://www.youtube.com/live/vYRfQo6JMxc"
+    ]
+}
+
+];
+
+// ================= PLAYER SYSTEM =================
+
+const grid = document.getElementById("channelGrid");
+const status = document.getElementById("status");
+const preview = document.getElementById("preview");
+
+let player;
+let currentChannel = null;
+let index = 0;
+
+function onYouTubeIframeAPIReady() {
+    player = new YT.Player("player", {
+        events: {
+            onReady: () => { buildGrid(); noSignal(); },
+            onStateChange: onStateChange
+        }
+    });
+}
+
+function buildGrid() {
+    grid.innerHTML = "";
+
+    channels.forEach(ch => {
+        const div = document.createElement("div");
+        div.className = "channel-card";
+
+        div.innerHTML = `
+            <div class="live-badge">LIVE</div>
+            <img class="channel-thumb" src="${ch.thumb}">
+            <div class="channel-name">CH ${ch.channel} - ${ch.name}</div>
+            <a class="yt-btn" target="_blank" href="https://youtu.be/${getVideoId(ch.playlist[0])}">▶ YouTube</a>
+        `;
+
+        const badge = div.querySelector(".live-badge");
+
+        div.onclick = () => {
+            showPreview(ch);
+            setTimeout(() => tune(ch), 400);
+        };
+
+        ch._badge = badge;
+        grid.appendChild(div);
+    });
+}
+
+function showPreview(ch) {
+    const id = getVideoId(ch.playlist[0]);
+    preview.src = "https://www.youtube.com/embed/" + id;
+    preview.style.opacity = "1";
+    status.innerText = "TUNING...";
+}
+
+function tune(ch) {
+    currentChannel = ch;
+    index = 0;
+    preview.style.opacity = "0";
+    updateLive();
+    playCurrent();
+}
+
+function playCurrent() {
+    const id = getVideoId(currentChannel.playlist[index]);
+    player.loadVideoById(id);
+
+    status.innerText =
+        "📺 " + currentChannel.name +
+        " (" + (index + 1) + "/" + currentChannel.playlist.length + ")";
+}
+
+function nextVideo() {
+    index++;
+    if (index >= currentChannel.playlist.length) index = 0;
+    playCurrent();
+}
+
+function onStateChange(e) {
+    if (e.data === YT.PlayerState.ENDED) nextVideo();
+}
+
+function updateLive() {
+    channels.forEach(ch => {
+        if (!ch._badge) return;
+        ch._badge.style.display = (ch === currentChannel) ? "block" : "none";
+    });
+}
+
+function noSignal() {
+    currentChannel = null;
+    preview.style.opacity = "0";
+    status.innerText = "NO SIGNAL";
+    player.stopVideo();
+    updateLive();
+}
+
+</script>
+
+</body>
+</html>
